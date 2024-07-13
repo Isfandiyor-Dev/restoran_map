@@ -30,9 +30,10 @@ class _AdminPageState extends State<AdminPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(context: context, builder: (ctx) => AddRestaurantDialog());
+          showDialog(
+              context: context, builder: (ctx) => const AddRestaurantDialog());
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
       body: BlocBuilder<RestaurantCubit, RestaurantState>(
         builder: (context, state) {
@@ -85,7 +86,14 @@ class _AdminPageState extends State<AdminPage> {
                     itemBuilder: (ctx) {
                       return [
                         PopupMenuItem(
-                          onTap: () {},
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AddRestaurantDialog(
+                                restaurant: restaurant,
+                              ),
+                            );
+                          },
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -105,7 +113,11 @@ class _AdminPageState extends State<AdminPage> {
                           ),
                         ),
                         PopupMenuItem(
-                          onTap: () {},
+                          onTap: () {
+                            context
+                                .read<RestaurantCubit>()
+                                .deleteRestaurant(restaurant.id);
+                          },
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:location/location.dart';
 import 'package:restoran_map/views/admin/add_location.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +9,10 @@ import 'package:restoran_map/models/restaurant.dart';
 import 'package:restoran_map/views/widgets/my_text_field.dart';
 
 class AddRestaurantDialog extends StatefulWidget {
+  final Restaurant? restaurant;
   const AddRestaurantDialog({
     super.key,
+    this.restaurant,
   });
 
   @override
@@ -25,11 +26,18 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
   File? image;
   Point? location;
 
-  final descriptionController = TextEditingController();
-  final nameController = TextEditingController();
-  final priceController = TextEditingController();
-  final ratingController = TextEditingController();
-  final titleController = TextEditingController();
+  late TextEditingController descriptionController;
+  late TextEditingController titleController;
+
+  @override
+  void initState() {
+    super.initState();
+    location = widget.restaurant?.location;
+    descriptionController =
+        TextEditingController(text: widget.restaurant?.description ?? '');
+    titleController =
+        TextEditingController(text: widget.restaurant?.name ?? '');
+  }
 
   Future<void> _pickImage(ImageSource source, int imageIndex) async {
     XFile? pickedFile = await _picker.pickImage(source: source);
@@ -48,19 +56,38 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
           child: CircularProgressIndicator(),
         ),
       );
-      BlocProvider.of<RestaurantCubit>(context)
-          .addRestaurant(
-        Restaurant(
-          name: titleController.text,
-          description: descriptionController.text,
-          imageUrl: image,
-          location: location,
-        ),
-      )
-          .then((value) {
-        Navigator.pop(context);
-        Navigator.pop(context);
-      });
+      if (widget.restaurant == null) {
+        BlocProvider.of<RestaurantCubit>(context)
+            .addRestaurant(
+          Restaurant(
+            id: UniqueKey().toString(),
+            name: titleController.text,
+            description: descriptionController.text,
+            imageUrl: image,
+            location: location,
+          ),
+        )
+            .then((value) {
+          Navigator.pop(context);
+          Navigator.pop(context);
+        });
+      } else {
+        BlocProvider.of<RestaurantCubit>(context)
+            .editRestaurant(
+          widget.restaurant!.id,
+          Restaurant(
+            id: UniqueKey().toString(),
+            name: titleController.text,
+            description: descriptionController.text,
+            imageUrl: image,
+            location: location,
+          ),
+        )
+            .then((value) {
+          Navigator.pop(context);
+          Navigator.pop(context);
+        });
+      }
     }
   }
 
@@ -154,7 +181,7 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text("Cancel"),
+          child: const Text("Cancel"),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
